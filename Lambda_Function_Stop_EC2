@@ -1,0 +1,18 @@
+import boto3
+def lambda_handler(event, context):
+    ec2= boto3.client('ec2')
+    response = ec2.describe_instances()
+    ID = []
+    for Reservation in response['Reservations']:
+        for Instance in Reservation['Instances']:
+            if Instance['State']['Name']=='running':
+                for tag in Instance.get('Tags',[]):
+                    if tag['Key']=='Environment' and tag['Value']=='Dev':
+                        server = (Instance['InstanceId'])
+                        ID.append(server)
+    print("List of EC2 servers that will be deleted are :"+str(ID))
+    response = ec2.stop_instances(InstanceIds=ID)
+    return {
+        'statusCode': 200,
+        'body': f'Stopped {len(ID)} instances'
+    }
